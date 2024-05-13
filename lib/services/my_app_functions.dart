@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-
 import '../widgets/subtitle_text.dart';
 import '../widgets/title_text.dart';
-import 'assets_manager.dart';
 
 class MyAppFunctions {
   static Future<void> showErrorOrWarningDialog({
@@ -22,7 +20,7 @@ class MyAppFunctions {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Image.asset(
-                  isError ? "assets/images/error.png" : "assets/images/warning.png",
+                  isError ? "assets/images/error.png" :"assets/images/warning.png",
                   height: 60,
                   width: 60,
                 ),
@@ -46,7 +44,7 @@ class MyAppFunctions {
                           Navigator.pop(context);
                         },
                         child: const SubtitleTextWidget(
-                          label: "Cancel",
+                          label: "Thoát",
                           color: Colors.green,
                         ),
                       ),
@@ -81,7 +79,7 @@ class MyAppFunctions {
           return AlertDialog(
             title: const Center(
               child: TitlesTextWidget(
-                label: "Choose option",
+                label: "Lựa chọn",
               ),
             ),
             content: SingleChildScrollView(
@@ -107,7 +105,7 @@ class MyAppFunctions {
                     icon: const Icon(
                       Icons.browse_gallery,
                     ),
-                    label: const Text("Gallery"),
+                    label: const Text("Thư viện"),
                   ),
                   TextButton.icon(
                     onPressed: () {
@@ -119,12 +117,20 @@ class MyAppFunctions {
                     icon: const Icon(
                       Icons.remove_circle_outline,
                     ),
-                    label: const Text("Remove"),
+                    label: const Text("Loại bỏ"),
                   ),
                 ],
               ),
             ),
           );
         });
+  }
+  static String getPrice(String price) {
+    int value = int.parse(price);
+    String formattedPrice = value.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]}.',
+    );
+    return formattedPrice;
   }
 }

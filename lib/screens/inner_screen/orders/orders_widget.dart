@@ -1,12 +1,14 @@
 import 'package:fancy_shimmer_image/fancy_shimmer_image.dart';
 import 'package:flutter/material.dart';
 import '../../../const/app_constants.dart';
+import '../../../models/order_model.dart';
+import '../../../services/my_app_functions.dart';
 import '../../../widgets/subtitle_text.dart';
 import '../../../widgets/title_text.dart';
 
 class OrdersWidgetFree extends StatefulWidget {
-  const OrdersWidgetFree({super.key});
-
+  const OrdersWidgetFree({super.key, required this.ordersModelAdvanced});
+  final OrdersModelAdvanced ordersModelAdvanced;
   @override
   State<OrdersWidgetFree> createState() => _OrdersWidgetFreeState();
 }
@@ -20,13 +22,23 @@ class _OrdersWidgetFreeState extends State<OrdersWidgetFree> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       child: Row(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: FancyShimmerImage(
-              height: size.width * 0.25,
-              width: size.width * 0.25,
-              imageUrl: AppConstants.imageUrl,
-            ),
+          Column(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: FancyShimmerImage(
+                  height: size.width * 0.25,
+                  width: size.width * 0.25,
+                  imageUrl: widget.ordersModelAdvanced.imageUrl,
+                ),
+              ),
+
+              SubtitleTextWidget(
+                label: "Size:${widget.ordersModelAdvanced.size}",
+                fontSize: 15,
+              ),
+
+            ],
           ),
           Flexible(
             child: Padding(
@@ -37,9 +49,9 @@ class _OrdersWidgetFreeState extends State<OrdersWidgetFree> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Flexible(
+                      Flexible(
                         child: TitlesTextWidget(
-                          label: 'productTitle',
+                          label: widget.ordersModelAdvanced.productTitle,
                           maxLines: 2,
                           fontSize: 15,
                         ),
@@ -53,15 +65,15 @@ class _OrdersWidgetFreeState extends State<OrdersWidgetFree> {
                           )),
                     ],
                   ),
-                  const Row(
+                  Row(
                     children: [
-                      TitlesTextWidget(
-                        label: 'Price:  ',
+                      const TitlesTextWidget(
+                        label: 'Giá:  ',
                         fontSize: 15,
                       ),
                       Flexible(
                         child: SubtitleTextWidget(
-                          label: "11.99 \$",
+                          label: "${MyAppFunctions.getPrice(widget.ordersModelAdvanced.price)} vnđ",
                           fontSize: 15,
                           color: Colors.blue,
                         ),
@@ -71,12 +83,24 @@ class _OrdersWidgetFreeState extends State<OrdersWidgetFree> {
                   const SizedBox(
                     height: 5,
                   ),
-                  const SubtitleTextWidget(
-                    label: "Qty: 10",
+                  SubtitleTextWidget(
+                    label: "Sl:${widget.ordersModelAdvanced.quantity}",
                     fontSize: 15,
                   ),
                   const SizedBox(
                     height: 5,
+                  ),
+                  Row(
+                    children: [
+                      const TitlesTextWidget(
+                        label: 'Khách hàng:  ',
+                        fontSize: 15,
+                      ),
+                      SubtitleTextWidget(
+                        label: "${widget.ordersModelAdvanced.userName}",
+                        fontSize: 15,
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -87,3 +111,4 @@ class _OrdersWidgetFreeState extends State<OrdersWidgetFree> {
     );
   }
 }
+

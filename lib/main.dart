@@ -1,3 +1,5 @@
+import 'package:admin/providers/order_provider.dart';
+import 'package:admin/screens/voucher_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -50,6 +52,9 @@ class MyApp extends StatelessWidget {
               ChangeNotifierProvider(create: (_) {
                 return ProductsProvider();
               }),
+              ChangeNotifierProvider(create: (_) {
+                return OrderProvider();
+              }),
             ],
             child: Consumer<ThemeProvider>(
                 builder: (context, themeProvider, child) {
@@ -66,6 +71,9 @@ class MyApp extends StatelessWidget {
                       SearchScreen.routeName: (context) => const SearchScreen(),
                       EditOrUploadProductScreen.routeName: (context) =>
                       const EditOrUploadProductScreen(),
+                      VoucherScreen.routName: (context) =>
+                      const VoucherScreen(),
+
                     },
                   );
                 }),

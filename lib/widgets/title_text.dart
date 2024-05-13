@@ -2,13 +2,12 @@ import 'package:flutter/cupertino.dart';
 
 class TitlesTextWidget extends StatelessWidget {
   const TitlesTextWidget({
-    Key? key,
+    super.key,
     required this.label,
     this.fontSize = 20,
     this.color,
     this.maxLines,
-  }) : super(key: key);
-
+  });
   final String label;
   final double fontSize;
   final Color? color;
@@ -18,7 +17,6 @@ class TitlesTextWidget extends StatelessWidget {
     return Text(
       label,
       maxLines: maxLines,
-      // textAlign: TextAlign.justify,
       style: TextStyle(
         color: color,
         fontSize: fontSize,

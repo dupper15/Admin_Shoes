@@ -1,8 +1,10 @@
+import 'package:admin/widgets/rating_bar.dart';
 import 'package:fancy_shimmer_image/fancy_shimmer_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/products_provider.dart';
 import '../screens/edit_upload_product_form.dart';
+import '../services/my_app_functions.dart';
 import 'subtitle_text.dart';
 import 'title_text.dart';
 
@@ -19,7 +21,6 @@ class ProductWidget extends StatefulWidget {
 class _ProductWidgetState extends State<ProductWidget> {
   @override
   Widget build(BuildContext context) {
-    // final productModelProvider = Provider.of<ProductModel>(context);
     final productsProvider = Provider.of<ProductsProvider>(context);
     final getCurrProduct = productsProvider.findByProdId(widget.productId);
     Size size = MediaQuery.of(context).size;
@@ -65,10 +66,15 @@ class _ProductWidgetState extends State<ProductWidget> {
             const SizedBox(
               height: 6.0,
             ),
+            RatingBarWidget(
+              productRate: getCurrProduct,
+              isEditing: false,
+              rated: 0,
+            ),
             Padding(
               padding: const EdgeInsets.all(2.0),
               child: SubtitleTextWidget(
-                label: "${getCurrProduct.productPrice}\$",
+                label: "${MyAppFunctions.getPrice(getCurrProduct.productPrice)} vnđ",
                 fontWeight: FontWeight.w600,
                 color: Colors.blue,
               ),

@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -20,7 +19,9 @@ class EditOrUploadProductScreen extends StatefulWidget {
   static const routeName = '/EditOrUploadProductScreen';
 
   const EditOrUploadProductScreen({super.key, this.productModel});
+
   final ProductModel? productModel;
+
   @override
   State<EditOrUploadProductScreen> createState() =>
       _EditOrUploadProductScreenState();
@@ -32,12 +33,14 @@ class _EditOrUploadProductScreenState extends State<EditOrUploadProductScreen> {
   late TextEditingController _titleController,
       _priceController,
       _descriptionController,
-      _quantityController;
+      _quantityController,
+      _sizeController;
   String? _categoryValue;
   bool isEditing = false;
   String? productNetworkImage;
   bool _isLoading = false;
   String? productImageUrl;
+
   @override
   void initState() {
     if (widget.productModel != null) {
@@ -52,8 +55,9 @@ class _EditOrUploadProductScreenState extends State<EditOrUploadProductScreen> {
     _descriptionController =
         TextEditingController(text: widget.productModel?.productDescription);
     _quantityController =
-        TextEditingController(text: widget.productModel?.productQuantity);
-
+        TextEditingController(text: '');
+    _sizeController =
+        TextEditingController(text: '');
     super.initState();
   }
 
@@ -63,6 +67,7 @@ class _EditOrUploadProductScreenState extends State<EditOrUploadProductScreen> {
     _priceController.dispose();
     _descriptionController.dispose();
     _quantityController.dispose();
+    _sizeController.dispose();
     super.dispose();
   }
 
@@ -71,6 +76,7 @@ class _EditOrUploadProductScreenState extends State<EditOrUploadProductScreen> {
     _priceController.clear();
     _descriptionController.clear();
     _quantityController.clear();
+    _sizeController.clear();
     removePickedImage();
   }
 
@@ -86,9 +92,7 @@ class _EditOrUploadProductScreenState extends State<EditOrUploadProductScreen> {
     FocusScope.of(context).unfocus();
     if (_pickedImage == null) {
       MyAppFunctions.showErrorOrWarningDialog(
-          context: context,
-          subtitle: "Make sure to pick up an image",
-          fct: () {});
+          context: context, subtitle: "Vui lòng chọn ảnh", fct: () {});
       return;
     }
     if (isValid) {
@@ -96,36 +100,86 @@ class _EditOrUploadProductScreenState extends State<EditOrUploadProductScreen> {
         setState(() {
           _isLoading = true;
         });
-        final productId = const Uuid().v4();
-        final ref = FirebaseStorage.instance
-            .ref()
-            .child("productsImages")
-            .child("$productId.jpg");
-        await ref.putFile(File(_pickedImage!.path));
-        productImageUrl = await ref.getDownloadURL();
-
-        await FirebaseFirestore.instance
+        final snapshot = await FirebaseFirestore.instance
             .collection("products")
-            .doc(widget.productModel!.productId)
-            .set({
-          'productId': widget.productModel!.productId,
-          'productTitle': _titleController.text,
-          'productPrice': _priceController.text,
-          'productImage': productImageUrl,
-          'productCategory': _categoryValue,
-          'productDescription': _descriptionController.text,
-          'productQuantity': _quantityController.text,
-          'createdAt': Timestamp.now(),
-        });
+            .where('productTitle', isEqualTo: _titleController.text)
+            .get();
+
+        final productId = const Uuid().v4();
+
+
+        final existingData = snapshot.docs.isNotEmpty ? snapshot.docs.first.data() : null;
+
+        if (existingData != null) {
+          List<Map<String, dynamic>> productQuantity =
+          List<Map<String, dynamic>>.from(existingData['productQuantity'] ?? []);
+          bool found = false;
+
+          for (int i = 0; i < productQuantity.length; i++) {
+            if (productQuantity[i]['size'] == _sizeController.text) {
+              productQuantity[i]['productQuantity'] =
+                  (int.parse(productQuantity[i]['productQuantity']) +
+                      int.parse(_quantityController.text))
+                      .toString();
+              await FirebaseFirestore.instance
+                  .collection("products")
+                  .doc(snapshot.docs.first.id)
+                  .update({
+                'productQuantity.$i.productQuantity': productQuantity[i]['productQuantity'],
+              });
+
+              found = true;
+              break;
+            }
+          }
+
+          if (!found) {
+            productQuantity.add({
+              'size': _sizeController.text,
+              'productQuantity': _quantityController.text,
+            });
+          }
+          await FirebaseFirestore.instance
+              .collection("products")
+              .doc(snapshot.docs.first.id)
+              .update({
+            'productQuantity': productQuantity,
+          });
+        }
+        if(snapshot.docs.isEmpty) {
+          final ref = FirebaseStorage.instance
+              .ref()
+              .child("productsImages")
+              .child("$productId.jpg");
+          await ref.putFile(File(_pickedImage!.path));
+          productImageUrl = await ref.getDownloadURL();
+          List<Map<String, dynamic>> productQuantity = [
+            {
+              'size': _sizeController.text,
+              'productQuantity': _quantityController.text,
+            }
+          ];
+          await FirebaseFirestore.instance.collection("products").doc(productId).set({
+            'productId': productId,
+            'productTitle': _titleController.text,
+            'productPrice': _priceController.text,
+            'productImage': productImageUrl,
+            'productCategory': _categoryValue,
+            'productDescription': _descriptionController.text,
+            'productQuantity': productQuantity,
+            'productRating': [],
+            'createdAt': Timestamp.now(),
+          });
+        }
         Fluttertoast.showToast(
-          msg: "Product has been added",
+          msg: "Sản phẩm đã được thêm vào",
           textColor: Colors.white,
         );
         if (!mounted) return;
         MyAppFunctions.showErrorOrWarningDialog(
             isError: false,
             context: context,
-            subtitle: "Clear Form?",
+            subtitle: "Bạn có muốn làm mới thông tin?",
             fct: () {
               clearForm();
             });
@@ -150,13 +204,12 @@ class _EditOrUploadProductScreenState extends State<EditOrUploadProductScreen> {
   }
 
   Future<void> _editProduct() async {
-
     final isValid = _formKey.currentState!.validate();
     FocusScope.of(context).unfocus();
     if (_pickedImage == null && productNetworkImage == null) {
       MyAppFunctions.showErrorOrWarningDialog(
         context: context,
-        subtitle: "Please pick up an image",
+        subtitle: "Vui lòng chọn ảnh",
         fct: () {},
       );
       return;
@@ -167,41 +220,85 @@ class _EditOrUploadProductScreenState extends State<EditOrUploadProductScreen> {
           _isLoading = true;
         });
 
-        if(_pickedImage != null){
+        if (_pickedImage != null) {
           final ref = FirebaseStorage.instance
               .ref()
               .child("productsImages")
-              .child("${_titleController.text}.jpg");
+              .child("${widget.productModel!.productId}.jpg");
           await ref.putFile(File(_pickedImage!.path));
           productImageUrl = await ref.getDownloadURL();
         }
 
-        final productId = const Uuid().v4();
-        await FirebaseFirestore.instance
+        // Lấy dữ liệu sản phẩm hiện tại
+        DocumentSnapshot snapshot = await FirebaseFirestore.instance
             .collection("products")
-            .doc(productId)
-            .update({
-          'productId': productId,
+            .doc(widget.productModel!.productId)
+            .get();
+        Map<String, dynamic> existingData =
+        snapshot.data() as Map<String, dynamic>;
+
+        // Cập nhật thông tin sản phẩm
+        Map<String, dynamic> updatedProduct = {
+          'productId': widget.productModel!.productId,
           'productTitle': _titleController.text,
           'productPrice': _priceController.text,
-          'productImage': productImageUrl?? productNetworkImage,
+          'productImage': productImageUrl ?? productNetworkImage,
           'productCategory': _categoryValue,
           'productDescription': _descriptionController.text,
-          'productQuantity': _quantityController.text,
           'createdAt': widget.productModel!.createdAt,
-        });
+        };
+
+        // Cập nhật productQuantity
+        List<Map<String, dynamic>> productQuantity =
+        List<Map<String, dynamic>>.from(existingData['productQuantity'] ??
+            []); // Sao chép danh sách hiện tại
+
+        String existingSize = _sizeController.text;
+        String existingProductQuantityText = _quantityController.text;
+        int newQuantity = int.parse(existingProductQuantityText);
+
+        // Tìm và cập nhật hoặc thêm mới thông tin size và quantity
+        bool found = false;
+        for (int i = 0; i < productQuantity.length; i++) {
+          if (productQuantity[i]['size'] == existingSize) {
+            productQuantity[i]['productQuantity'] =
+                newQuantity.toString(); // Cập nhật quantity nếu đã tồn tại size
+            found = true;
+            break;
+          }
+        }
+
+        // Nếu không tìm thấy size trong danh sách, thêm mới
+        if (!found) {
+          productQuantity.add({
+            'size': existingSize,
+            'productQuantity': newQuantity.toString(),
+          });
+        }
+
+        // Cập nhật thông tin sản phẩm với productQuantity mới
+        updatedProduct['productQuantity'] = productQuantity;
+
+        // Thực hiện cập nhật
+        await FirebaseFirestore.instance
+            .collection("products")
+            .doc(widget.productModel!.productId)
+            .update(updatedProduct);
+
         Fluttertoast.showToast(
-          msg: "Product has been edited",
+          msg: "Sản phẩm đã được sửa đổi",
           textColor: Colors.white,
         );
+
         if (!mounted) return;
         MyAppFunctions.showErrorOrWarningDialog(
-            isError: false,
-            context: context,
-            subtitle: "Clear Form?",
-            fct: () {
-              clearForm();
-            });
+          isError: false,
+          context: context,
+          subtitle: "Bạn có muốn làm mới thông tin?",
+          fct: () {
+            clearForm();
+          },
+        );
       } on FirebaseException catch (error) {
         await MyAppFunctions.showErrorOrWarningDialog(
           context: context,
@@ -228,12 +325,14 @@ class _EditOrUploadProductScreenState extends State<EditOrUploadProductScreen> {
       context: context,
       cameraFCT: () async {
         _pickedImage = await picker.pickImage(source: ImageSource.camera);
-        setState(() {});
+        setState(() {
+          productNetworkImage == null;
+        });
       },
       galleryFCT: () async {
         _pickedImage = await picker.pickImage(source: ImageSource.gallery);
         setState(() {
-          _pickedImage = null;
+          productNetworkImage == null;
         });
       },
       removeFCT: () {
@@ -271,11 +370,14 @@ class _EditOrUploadProductScreenState extends State<EditOrUploadProductScreen> {
                         ),
                       ),
                     ),
-                    icon: const Icon(Icons.clear),
+                    icon: const Icon(
+                      Icons.clear,
+                      color: Colors.white,
+                    ),
                     label: const Text(
-                      "Clear",
+                      "Xóa",
                       style: TextStyle(
-                        fontSize: 20,
+                        color: Colors.white,
                       ),
                     ),
                     onPressed: () {
@@ -285,7 +387,6 @@ class _EditOrUploadProductScreenState extends State<EditOrUploadProductScreen> {
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.all(12),
-                      // backgroundColor: Colors.red,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(
                           10,
@@ -294,7 +395,7 @@ class _EditOrUploadProductScreenState extends State<EditOrUploadProductScreen> {
                     ),
                     icon: const Icon(Icons.upload),
                     label: Text(
-                      isEditing ? "Edit Product" : "Upload Product",
+                      isEditing ? "Sửa sản phẩm" : "Thêm sản phẩm",
                     ),
                     onPressed: () {
                       if (isEditing) {
@@ -311,7 +412,7 @@ class _EditOrUploadProductScreenState extends State<EditOrUploadProductScreen> {
           appBar: AppBar(
             centerTitle: true,
             title: TitlesTextWidget(
-              label: isEditing ? "Edit Product" : "Upload a new product",
+              label: isEditing ? "Sửa sản phẩm" : "Thêm sản phẩm",
             ),
           ),
           body: SafeArea(
@@ -321,14 +422,11 @@ class _EditOrUploadProductScreenState extends State<EditOrUploadProductScreen> {
                   const SizedBox(
                     height: 20,
                   ),
-
-                  // Image Picker
                   if (isEditing && productNetworkImage != null) ...[
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: Image.network(
                         productNetworkImage!,
-                        // width: size.width * 0.7,
                         height: size.width * 0.5,
                         alignment: Alignment.center,
                       ),
@@ -339,24 +437,24 @@ class _EditOrUploadProductScreenState extends State<EditOrUploadProductScreen> {
                       height: size.width * 0.4,
                       child: DottedBorder(
                           child: Center(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(
-                                  Icons.image_outlined,
-                                  size: 80,
-                                  color: Colors.blue,
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    localImagePicker();
-                                  },
-                                  child: const Text("Pick Product Image"),
-                                ),
-                              ],
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.image_outlined,
+                              size: 80,
+                              color: Colors.blue,
                             ),
-                          )),
+                            TextButton(
+                              onPressed: () {
+                                localImagePicker();
+                              },
+                              child: const Text("Thêm hình ảnh"),
+                            ),
+                          ],
+                        ),
+                      )),
                     ),
                   ] else ...[
                     ClipRRect(
@@ -379,14 +477,14 @@ class _EditOrUploadProductScreenState extends State<EditOrUploadProductScreen> {
                           onPressed: () {
                             localImagePicker();
                           },
-                          child: const Text("Pick another image"),
+                          child: const Text("Chọn ảnh khác"),
                         ),
                         TextButton(
                           onPressed: () {
                             removePickedImage();
                           },
                           child: const Text(
-                            "Remove image",
+                            "Xóa ảnh",
                             style: TextStyle(color: Colors.red),
                           ),
                         ),
@@ -396,12 +494,11 @@ class _EditOrUploadProductScreenState extends State<EditOrUploadProductScreen> {
                   const SizedBox(
                     height: 25,
                   ),
-
                   // Category dropdown widget
                   DropdownButton(
                       items: AppConstants.categoriesDropDownList,
                       value: _categoryValue,
-                      hint: const Text("Choose a Category"),
+                      hint: const Text("Thương hiệu"),
                       onChanged: (String? value) {
                         setState(() {
                           _categoryValue = value;
@@ -412,7 +509,7 @@ class _EditOrUploadProductScreenState extends State<EditOrUploadProductScreen> {
                   ),
                   Padding(
                     padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
                     child: Form(
                       key: _formKey,
                       child: Column(
@@ -426,13 +523,13 @@ class _EditOrUploadProductScreenState extends State<EditOrUploadProductScreen> {
                             keyboardType: TextInputType.multiline,
                             textInputAction: TextInputAction.newline,
                             decoration: const InputDecoration(
-                              hintText: 'Product Title',
+                              hintText: 'Tên sản phẩm',
                             ),
                             validator: (value) {
                               return MyValidators.uploadProdTexts(
                                 value: value,
                                 toBeReturnedString:
-                                "Please enter a valid title",
+                                    "Vui lòng nhập tên sản phẩm ",
                               );
                             },
                           ),
@@ -442,8 +539,9 @@ class _EditOrUploadProductScreenState extends State<EditOrUploadProductScreen> {
                           Row(
                             children: [
                               Flexible(
-                                flex: 1,
+                                flex: 2,
                                 child: TextFormField(
+                                  textAlign: TextAlign.left,
                                   controller: _priceController,
                                   key: const ValueKey('Price \$'),
                                   keyboardType: TextInputType.number,
@@ -453,16 +551,17 @@ class _EditOrUploadProductScreenState extends State<EditOrUploadProductScreen> {
                                     ),
                                   ],
                                   decoration: const InputDecoration(
-                                      hintText: 'Price',
+                                      hintText: 'Giá',
                                       prefix: SubtitleTextWidget(
-                                        label: "\$ ",
+                                        label: "vnđ ",
                                         color: Colors.blue,
                                         fontSize: 16,
                                       )),
                                   validator: (value) {
                                     return MyValidators.uploadProdTexts(
                                       value: value,
-                                      toBeReturnedString: "Price is missing",
+                                      toBeReturnedString:
+                                          "Giá tiền không hợp lệ",
                                     );
                                   },
                                 ),
@@ -480,12 +579,36 @@ class _EditOrUploadProductScreenState extends State<EditOrUploadProductScreen> {
                                   keyboardType: TextInputType.number,
                                   key: const ValueKey('Quantity'),
                                   decoration: const InputDecoration(
-                                    hintText: 'Qty',
+                                    hintText: 'Số lượng',
                                   ),
                                   validator: (value) {
                                     return MyValidators.uploadProdTexts(
                                       value: value,
-                                      toBeReturnedString: "Quantity is missed",
+                                      toBeReturnedString:
+                                          "Số lượng không hợp lệ",
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(
+                                width: 10,
+                              ),
+                              Flexible(
+                                flex: 1,
+                                child: TextFormField(
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly
+                                  ],
+                                  controller: _sizeController,
+                                  keyboardType: TextInputType.number,
+                                  key: const ValueKey('Size'),
+                                  decoration: const InputDecoration(
+                                    hintText: 'Size',
+                                  ),
+                                  validator: (value) {
+                                    return MyValidators.uploadProdTexts(
+                                      value: value,
+                                      toBeReturnedString: "Size không hợp lệ",
                                     );
                                   },
                                 ),
@@ -497,16 +620,16 @@ class _EditOrUploadProductScreenState extends State<EditOrUploadProductScreen> {
                             key: const ValueKey('Description'),
                             controller: _descriptionController,
                             minLines: 5,
-                            maxLines: 8,
-                            maxLength: 1000,
+                            maxLines: 15,
+                            maxLength: 2000,
                             textCapitalization: TextCapitalization.sentences,
                             decoration: const InputDecoration(
-                              hintText: 'Product description',
+                              hintText: 'Mô tả',
                             ),
                             validator: (value) {
                               return MyValidators.uploadProdTexts(
                                 value: value,
-                                toBeReturnedString: "Description is missed",
+                                toBeReturnedString: "Mô tả không hợp lệ",
                               );
                             },
                             onTap: () {},

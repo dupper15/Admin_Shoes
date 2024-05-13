@@ -10,7 +10,7 @@ class AppConstants {
     'CONVERSE',
     'VANS',
     'MLB',
-    'NEW BALANCE',
+    'REEBOK',
     'SKECHERS',
     'PALLADIUM',
   ];

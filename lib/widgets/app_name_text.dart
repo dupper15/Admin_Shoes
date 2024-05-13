@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
-
 import 'title_text.dart';
 
 class AppNameTextWidget extends StatelessWidget {
@@ -9,13 +8,13 @@ class AppNameTextWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
-      period: const Duration(seconds: 22),
-      baseColor: Colors.purple,
-      highlightColor: Colors.red,
-      child: TitlesTextWidget(
-        label: "Shop smart",
-        fontSize: fontSize,
-      ),
+        period: const Duration(seconds: 4),
+        baseColor: const Color(0xFFF7EEDD),
+        highlightColor: const Color(0xFF008DDA),
+        child: TitlesTextWidget(
+          label: "Peach Sneaker",
+          fontSize: fontSize,
+        )
     );
   }
 }

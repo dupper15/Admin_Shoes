@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../models/product_model.dart';
 import '../providers/products_provider.dart';
-import '../services/assets_manager.dart';
 import '../widgets/product_widget.dart';
 import '../widgets/title_text.dart';
 import 'package:dynamic_height_grid_view/dynamic_height_grid_view.dart';
@@ -46,13 +44,7 @@ class _SearchScreenState extends State<SearchScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          // leading: Padding(
-          //   padding: const EdgeInsets.all(8.0),
-          //   child: Image.asset(
-          //     AssetsManager.shoppingCart,
-          //   ),
-          // ),
-          title: TitlesTextWidget(label: passedCategory ?? "Search products"),
+          title: TitlesTextWidget(label: passedCategory ?? "Tìm kiếm"),
         ),
         body:  StreamBuilder<List<ProductModel>>(
             stream: productsProvider.fetchProductsStream(),
@@ -62,7 +54,6 @@ class _SearchScreenState extends State<SearchScreen> {
                   debugShowCheckedModeBanner: false,
                   home: Center(
                     child: CircularProgressIndicator(),
-
                   ),
                 );
               } else if (snapshot.hasError) {
@@ -72,7 +63,7 @@ class _SearchScreenState extends State<SearchScreen> {
               }
               else if(snapshot.data == null){
                 return const Center(
-                  child: SelectableText("No products has been added"),
+                  child: SelectableText("Chưa có sản phẩm nào ở cửa hàng"),
                 );
               }
               return Padding(
@@ -85,14 +76,12 @@ class _SearchScreenState extends State<SearchScreen> {
                     TextField(
                       controller: searchTextController,
                       decoration: InputDecoration(
-                        hintText: "Search",
+                        hintText: "Tìm kiếm",
                         prefixIcon: const Icon(Icons.search),
                         suffixIcon: GestureDetector(
                           onTap: () {
-                            // setState(() {
                             FocusScope.of(context).unfocus();
                             searchTextController.clear();
-                            // });
                           },
                           child: const Icon(
                             Icons.clear,
@@ -100,28 +89,22 @@ class _SearchScreenState extends State<SearchScreen> {
                           ),
                         ),
                       ),
-                      /* onChanged: (value) {
-                            setState(() {
-                              productListSearch = productsProvider.searchQuery(
-                                  searchText: searchTextController.text,
-                              );
-                            });
-                          }, */
                       onSubmitted: (value) {
                         setState(() {
                           productListSearch = productsProvider.searchQuery(
                               searchText: searchTextController.text,
-                              passedList: productList);
+                              passedList: productList
+                          );
                         });
                       },
                     ),
                     const SizedBox(
                       height: 15.0,
                     ),
-                    if (searchTextController.text.isEmpty &&
+                    if (searchTextController.text.isNotEmpty &&
                         productListSearch.isEmpty) ...[
                       const Center(
-                          child: TitlesTextWidget(label: "No products found")),
+                          child: TitlesTextWidget(label: "Không có sản phẩm được tìm thấy")),
                     ],
                     Expanded(
                       child: DynamicHeightGridView(

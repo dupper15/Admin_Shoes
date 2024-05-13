@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/dashboard_btn_model.dart';
 import '../providers/theme_provider.dart';
-import '../services/assets_manager.dart';
 import '../widgets/dashboard_btns.dart';
 import '../widgets/title_text.dart';
 
@@ -20,10 +19,12 @@ class DashboardScreenState extends State<DashboardScreen> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
         appBar: AppBar(
-          title: const TitlesTextWidget(label: "Dashboard Screen"),
+          title: const TitlesTextWidget(label: "Trang chủ"),
           leading: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Image.asset("assets/images/bag/shopping_cart.png"),
+            child: Image.asset("assets/images/logo.png",
+            filterQuality: FilterQuality.high,
+            ),
           ),
           actions: [
             IconButton(
