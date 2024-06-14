@@ -1,4 +1,6 @@
 import 'package:admin/providers/order_provider.dart';
+import 'package:admin/screens/chat_list_screen.dart';
+import 'package:admin/screens/inner_screen/chats/chat_screen.dart';
 import 'package:admin/screens/voucher_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -58,25 +60,24 @@ class MyApp extends StatelessWidget {
             ],
             child: Consumer<ThemeProvider>(
                 builder: (context, themeProvider, child) {
-                  return MaterialApp(
-                    debugShowCheckedModeBanner: false,
-                    title: 'Shop Smart ADMIN EN',
-                    theme: Styles.themeData(
-                        isDarkTheme: themeProvider.getIsDarkTheme,
-                        context: context),
-                    home: const DashboardScreen(),
-                    routes: {
-                      OrdersScreenFree.routeName: (context) =>
+              return MaterialApp(
+                debugShowCheckedModeBanner: false,
+                title: 'Shop Smart ADMIN EN',
+                theme: Styles.themeData(
+                    isDarkTheme: themeProvider.getIsDarkTheme,
+                    context: context),
+                home: const DashboardScreen(),
+                routes: {
+                  OrdersScreenFree.routeName: (context) =>
                       const OrdersScreenFree(),
-                      SearchScreen.routeName: (context) => const SearchScreen(),
-                      EditOrUploadProductScreen.routeName: (context) =>
+                  SearchScreen.routeName: (context) => const SearchScreen(),
+                  EditOrUploadProductScreen.routeName: (context) =>
                       const EditOrUploadProductScreen(),
-                      VoucherScreen.routName: (context) =>
-                      const VoucherScreen(),
-
-                    },
-                  );
-                }),
+                  VoucherScreen.routName: (context) => const VoucherScreen(),
+                  ChatListScreen.routName: (context) => const ChatListScreen(),
+                },
+              );
+            }),
           );
         });
   }
