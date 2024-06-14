@@ -87,6 +87,7 @@ class _OrdersWidgetFreeState extends State<OrdersWidgetFree> {
                     label: "Sl:${widget.ordersModelAdvanced.quantity}",
                     fontSize: 15,
                   ),
+
                   const SizedBox(
                     height: 5,
                   ),
