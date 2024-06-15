@@ -6,105 +6,111 @@ import '../../../services/my_app_functions.dart';
 import '../../../widgets/subtitle_text.dart';
 import '../../../widgets/title_text.dart';
 
-class OrdersWidgetFree extends StatefulWidget {
-  const OrdersWidgetFree({super.key, required this.ordersModelAdvanced});
-  final OrdersModelAdvanced ordersModelAdvanced;
+class OrderWidget extends StatefulWidget {
+  const OrderWidget({super.key, required this.nOrder});
+
+  final Order nOrder;
+
   @override
-  State<OrdersWidgetFree> createState() => _OrdersWidgetFreeState();
+  State<OrderWidget> createState() => _OrderWidgetState();
 }
 
-class _OrdersWidgetFreeState extends State<OrdersWidgetFree> {
+class _OrderWidgetState extends State<OrderWidget> {
   bool isLoading = false;
+
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      child: Row(
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: FancyShimmerImage(
-                  height: size.width * 0.25,
-                  width: size.width * 0.25,
-                  imageUrl: widget.ordersModelAdvanced.imageUrl,
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Container(
+                  decoration:
+                  BoxDecoration(border: Border.all(color: Colors.black)),
+                  child: SizedBox(
+                    height: 80,
+                    width: 80,
+                    child: Image.network(
+                      widget.nOrder.displayProduct.imageUrl,
+                      fit: BoxFit.scaleDown,
+                      loadingBuilder: (BuildContext context, Widget child,
+                          ImageChunkEvent? loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                                : null,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 ),
-              ),
-
-              SubtitleTextWidget(
-                label: "Size:${widget.ordersModelAdvanced.size}",
-                fontSize: 15,
-              ),
-
-            ],
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          widget.nOrder.displayProduct.productTitle,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 16.0),
+                        ),
+                        Text(
+                          "${MyAppFunctions.getPrice(widget.nOrder.displayProduct.price)} vnđ",
+                          style: const TextStyle(fontSize: 16.0),
+                        ),
+                        Text(
+                          "x${widget.nOrder.displayProduct.quantity}",
+                          style: const TextStyle(fontSize: 16.0),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              ],
+            ),
           ),
-          Flexible(
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Flexible(
-                        child: TitlesTextWidget(
-                          label: widget.ordersModelAdvanced.productTitle,
-                          maxLines: 2,
-                          fontSize: 15,
-                        ),
-                      ),
-                      IconButton(
-                          onPressed: () {},
-                          icon: const Icon(
-                            Icons.clear,
-                            color: Colors.red,
-                            size: 22,
-                          )),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      const TitlesTextWidget(
-                        label: 'Giá:  ',
-                        fontSize: 15,
-                      ),
-                      Flexible(
-                        child: SubtitleTextWidget(
-                          label: "${MyAppFunctions.getPrice(widget.ordersModelAdvanced.price)} vnđ",
-                          fontSize: 15,
-                          color: Colors.blue,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                  SubtitleTextWidget(
-                    label: "Sl:${widget.ordersModelAdvanced.quantity}",
-                    fontSize: 15,
-                  ),
-
-                  const SizedBox(
-                    height: 5,
-                  ),
-                  Row(
-                    children: [
-                      const TitlesTextWidget(
-                        label: 'Khách hàng:  ',
-                        fontSize: 15,
-                      ),
-                      SubtitleTextWidget(
-                        label: "${widget.ordersModelAdvanced.userName}",
-                        fontSize: 15,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+          const Divider(
+            indent: 4.0,
+            endIndent: 4.0,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "${widget.nOrder.quantity} sản phẩm",
+                  style: const TextStyle(fontSize: 16.0),
+                ),
+                Text(
+                  "Thành tiền: ${MyAppFunctions.getPrice(widget.nOrder.total)} vnđ",
+                  style: const TextStyle(fontSize: 16.0),
+                ),
+              ],
+            ),
+          ),
+          const Divider(
+            indent: 4.0,
+            endIndent: 4.0,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              widget.nOrder.status,
+              style: const TextStyle(fontSize: 16.0),
             ),
           ),
         ],

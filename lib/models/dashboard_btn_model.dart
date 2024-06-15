@@ -35,7 +35,7 @@ class DashboardButtonsModel {
           text: "Đơn đặt hàng",
           imagePath: "assets/images/shoesOrder.png",
           onPressed: () {
-            Navigator.pushNamed(context, OrdersScreenFree.routeName);
+            Navigator.pushNamed(context, OrdersScreen.routeName);
           },
         ),
         DashboardButtonsModel(
