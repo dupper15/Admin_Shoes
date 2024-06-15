@@ -2,6 +2,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../widgets/title_text.dart';
 import 'inner_screen/chats/datatype.dart';
 import 'inner_screen/chats/util.dart';
 
@@ -30,10 +31,18 @@ class _ChatListScreenState extends State<ChatListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Chats'),
+        centerTitle: true,
+        leading: IconButton(
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          },
+          icon: const Icon(Icons.arrow_back_ios, size: 20),
+        ),
+        title: const TitlesTextWidget(label: "Chăm sóc khách hàng"),
       ),
       body: Expanded(child: buildChatList(context),
-
       ),
     );
   }

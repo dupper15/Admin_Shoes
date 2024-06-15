@@ -1,11 +1,15 @@
 import 'dart:io';
 
 import 'package:admin/screens/inner_screen/chats/chat_screen.dart';
+import 'package:admin/widgets/subtitle_text.dart';
+import 'package:admin/widgets/title_text.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fancy_shimmer_image/fancy_shimmer_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../services/my_app_functions.dart';
@@ -103,22 +107,42 @@ class ChatWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: MediaQuery.of(context).size.width,
+      height: MediaQuery.of(context).size.height *0.11,
       padding: EdgeInsets.all(8.0),
       margin: EdgeInsets.symmetric(vertical: 4.0),
-      decoration: BoxDecoration(
-        color: Colors.blue[100],
-        borderRadius: BorderRadius.circular(8.0),
-      ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            shopper.userName!,
-            style: const TextStyle(fontSize: 16.0),
+          const SizedBox(width: 4.0),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: FancyShimmerImage(
+              height: MediaQuery.of(context).size.height *0.08,
+              width: MediaQuery.of(context).size.height *0.08,
+              imageUrl: shopper.userImage ?? 'https://i.pinimg.com/originals/8e/18/19/8e1819672696ff794fd2678e7d1ba2fc.jpg',
+
+            ),
+          ),
+          const SizedBox(width: 8.0),
+          Column(
+
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 2.0),
+              TitlesTextWidget(
+                fontSize: 18,
+                label: shopper.userName!,
+              ),
+              Text(
+                'ID: ${shopper.userId!}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
           /*
           Image(image: shopper.userImage!)*/
-          const SizedBox(height: 4.0),
+
         ],
       ),
     );
