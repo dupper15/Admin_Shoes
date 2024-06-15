@@ -22,7 +22,12 @@ User? currentUser = auth.currentUser;
 void onReplySent(String reply, String type, String chatId, String shopperId) {
   if (reply != '') {
     final messageId =
-        db.collection("chats").doc(chatId).collection("messages").doc().id;
+        db
+            .collection("chats")
+            .doc(chatId)
+            .collection("messages")
+            .doc()
+            .id;
     Map<String, dynamic> message = {
       "messageId": messageId,
       "type": type,
@@ -38,41 +43,6 @@ void onReplySent(String reply, String type, String chatId, String shopperId) {
         .set(message);
   }
 }
-/*
-  Future<void> getChat() async {
-    final snapshot = await db
-        .collection("chats")
-        .where("shopper.userId", isEqualTo: "testShopperId")
-        .limit(1) // Limit to 1 document
-        .get();
-
-    if (snapshot.docs.isNotEmpty) {
-      final docData = snapshot.docs.first.data(); // Access data as a Map
-      if (docData != null) {
-        myChat = Chat.fromJson(docData as Map<String, dynamic>);
-      }
-    }
-  }
-
-  Future<void> getMessages() async {
-    await getChat();
-    Stream<QuerySnapshot> stream = db
-        .collection("chats")
-        .doc(myChat.chatId)
-        .collection("messages")
-        .snapshots();
-    if (await stream.isEmpty) {
-      // do something
-    } else {
-      stream.listen((event) {
-        for (DocumentSnapshot doc in event.docs) {
-          var data = doc.data() as Map<String, dynamic>;
-          var tempMessage = Message.fromJson(data);
-          messageList.add(tempMessage);
-        }
-      });
-    }
-  }*/
 
 class MessageWidget extends StatelessWidget {
   /*
@@ -106,46 +76,18 @@ class ChatWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: MediaQuery.of(context).size.width,
-      height: MediaQuery.of(context).size.height *0.11,
-      padding: EdgeInsets.all(8.0),
-      margin: EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        children: [
-          const SizedBox(width: 4.0),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: FancyShimmerImage(
-              height: MediaQuery.of(context).size.height *0.08,
-              width: MediaQuery.of(context).size.height *0.08,
-              imageUrl: shopper.userImage ?? 'https://i.pinimg.com/originals/8e/18/19/8e1819672696ff794fd2678e7d1ba2fc.jpg',
+    return StreamBuilder<QuerySnapshot>(
+        stream: db
+            .collection("chats")
+            .doc("chat_${shopper.userId}")
+            .collection("messages").orderBy("timestamp", descending: true)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            final message = snapshot.data?.docs.first;
 
-            ),
-          ),
-          const SizedBox(width: 8.0),
-          Column(
-
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 2.0),
-              TitlesTextWidget(
-                fontSize: 18,
-                label: shopper.userName!,
-              ),
-              Text(
-                'ID: ${shopper.userId!}',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-          /*
-          Image(image: shopper.userImage!)*/
-
-        ],
-      ),
-    );
+        }
+        });
   }
 }
 
@@ -234,7 +176,7 @@ Widget imageMessage(Message message) {
                 child: CircularProgressIndicator(
                   value: loadingProgress.expectedTotalBytes != null
                       ? loadingProgress.cumulativeBytesLoaded /
-                          loadingProgress.expectedTotalBytes!
+                      loadingProgress.expectedTotalBytes!
                       : null,
                 ),
               );
@@ -256,13 +198,15 @@ Future<String> uploadImage(XFile pickedImage) async {
       .ref()
       .child("chatImages")
       .child("chat_${currentUser?.uid}")
-      .child("${DateTime.now().millisecondsSinceEpoch}.jpg");
+      .child("${DateTime
+      .now()
+      .millisecondsSinceEpoch}.jpg");
   await ref.putFile(File(pickedImage.path));
   return await ref.getDownloadURL();
 } //Shopper only
 
-Future<void> onSendImage(
-    BuildContext context, String chatId, String shopperId) async {
+Future<void> onSendImage(BuildContext context, String chatId,
+    String shopperId) async {
   XFile? pickedImage;
   final ImagePicker imagePicker = ImagePicker();
   await MyAppFunctions.imagePickerDialog(
