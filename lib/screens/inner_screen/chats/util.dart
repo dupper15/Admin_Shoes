@@ -22,12 +22,7 @@ User? currentUser = auth.currentUser;
 void onReplySent(String reply, String type, String chatId, String shopperId) {
   if (reply != '') {
     final messageId =
-        db
-            .collection("chats")
-            .doc(chatId)
-            .collection("messages")
-            .doc()
-            .id;
+        db.collection("chats").doc(chatId).collection("messages").doc().id;
     Map<String, dynamic> message = {
       "messageId": messageId,
       "type": type,
@@ -80,16 +75,123 @@ class ChatWidget extends StatelessWidget {
         stream: db
             .collection("chats")
             .doc("chat_${shopper.userId}")
-            .collection("messages").orderBy("timestamp", descending: true)
+            .collection("messages")
+            .orderBy("timestamp", descending: true)
             .snapshots(),
         builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            final message = snapshot.data?.docs.first;
-
-        }
+          final messageContent;
+          final messageTimeStamp;
+          if (snapshot.data?.docs != null) {
+            //do not touch this
+            if (snapshot.data!.docs.isNotEmpty) {
+              // do not touch this
+              if (snapshot.data?.docs.first["type"] == "text") {
+                messageContent = "${snapshot.data?.docs.first["content"]} • ";
+              } else {
+                messageContent = "Hình ảnh • ";
+              }
+              messageTimeStamp =
+                  getTimeFromTimeStamp(snapshot.data?.docs.first["timestamp"]);
+            } else {
+              messageContent = "";
+              messageTimeStamp = "";
+            }
+          } else {
+            messageContent = "";
+            messageTimeStamp = "";
+          }
+          return Container(
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height * 0.11,
+            padding: EdgeInsets.all(8.0),
+            margin: EdgeInsets.symmetric(vertical: 4.0),
+            child: Row(
+              children: [
+                const SizedBox(width: 4.0),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: FancyShimmerImage(
+                    height: MediaQuery.of(context).size.height * 0.08,
+                    width: MediaQuery.of(context).size.height * 0.08,
+                    imageUrl: shopper.userImage ??
+                        'https://i.pinimg.com/originals/8e/18/19/8e1819672696ff794fd2678e7d1ba2fc.jpg',
+                  ),
+                ),
+                const SizedBox(width: 8.0),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 2.0),
+                    TitlesTextWidget(
+                      fontSize: 18,
+                      label: shopper.userName!,
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          messageContent,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          messageTimeStamp,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                /*
+          Image(image: shopper.userImage!)*/
+              ],
+            ),
+          );
         });
   }
 }
+
+/*return Container(
+      width: MediaQuery.of(context).size.width,
+      height: MediaQuery.of(context).size.height *0.11,
+      padding: EdgeInsets.all(8.0),
+      margin: EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        children: [
+          const SizedBox(width: 4.0),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: FancyShimmerImage(
+              height: MediaQuery.of(context).size.height *0.08,
+              width: MediaQuery.of(context).size.height *0.08,
+              imageUrl: shopper.userImage ?? 'https://i.pinimg.com/originals/8e/18/19/8e1819672696ff794fd2678e7d1ba2fc.jpg',
+
+            ),
+          ),
+          const SizedBox(width: 8.0),
+          Column(
+
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 2.0),
+              TitlesTextWidget(
+                fontSize: 18,
+                label: shopper.userName!,
+              ),
+              Text(
+                'ID: ${shopper.userId!}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+          /*
+          Image(image: shopper.userImage!)*/
+
+        ],
+      ),
+    );*/
 
 Widget buildChatList(BuildContext context) {
   return StreamBuilder<QuerySnapshot>(
@@ -176,7 +278,7 @@ Widget imageMessage(Message message) {
                 child: CircularProgressIndicator(
                   value: loadingProgress.expectedTotalBytes != null
                       ? loadingProgress.cumulativeBytesLoaded /
-                      loadingProgress.expectedTotalBytes!
+                          loadingProgress.expectedTotalBytes!
                       : null,
                 ),
               );
@@ -198,15 +300,13 @@ Future<String> uploadImage(XFile pickedImage) async {
       .ref()
       .child("chatImages")
       .child("chat_${currentUser?.uid}")
-      .child("${DateTime
-      .now()
-      .millisecondsSinceEpoch}.jpg");
+      .child("${DateTime.now().millisecondsSinceEpoch}.jpg");
   await ref.putFile(File(pickedImage.path));
   return await ref.getDownloadURL();
 } //Shopper only
 
-Future<void> onSendImage(BuildContext context, String chatId,
-    String shopperId) async {
+Future<void> onSendImage(
+    BuildContext context, String chatId, String shopperId) async {
   XFile? pickedImage;
   final ImagePicker imagePicker = ImagePicker();
   await MyAppFunctions.imagePickerDialog(

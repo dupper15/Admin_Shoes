@@ -35,7 +35,7 @@ class _ChatScreenState extends State<ChatScreen> {
           icon: const Icon(Icons.arrow_back_ios, size: 20),
         ),
         title: const TitlesTextWidget(
-          label: "Voucher của bạn",
+          label: "Chat",
           fontSize: 22,
         ),
       ),
