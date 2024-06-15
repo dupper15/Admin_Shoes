@@ -1,17 +1,10 @@
-import 'package:check/models/norder__model.dart';
-import 'package:check/models/order_model.dart';
-import 'package:check/providers/order_list_provider.dart';
-import 'package:check/providers/order_provider.dart';
-import 'package:check/screens/chat/util.dart';
-import 'package:check/screens/inner_screen/orders/orders_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../widgets/empty_bag.dart';
 import '../../../models/order_model.dart';
 import '../../../providers/order_provider.dart';
 import '../../../widgets/title_text.dart';
-import '../chat/datatype.dart';
-import 'order_widget.dart';
+import 'order_detail/order_detail_screen.dart';
 import 'orders_widget.dart';
 
 class OrdersScreen extends StatefulWidget {
@@ -53,25 +46,25 @@ class _OrderScreenState extends State<OrdersScreen> {
             } else if (!snapshot.hasData ||
                 ordersListProvider.getOrders.isEmpty) {
               return const EmptyBagWidget(
-                  imagePath: 'images/emptyn.png',
-                  title: "Có vẻ như bạn chưa mua sản phẩm nào",
-                  subtitle: "",
-                  buttonText: "Mua hàng ngay");
+                imagePath: 'assets/images/emptyn.png',
+                title: "Chưa có sản phẩm nào được bán",
+                subtitle: "",
+              );
             }
             return ListView.separated(
               itemCount: snapshot.data!.length,
               itemBuilder: (ctx, index) {
                 return GestureDetector(
                   onTap: () async {
-                    await Navigator.push(
+                   await Navigator.push(
                         context,
                         MaterialPageRoute(
                             builder: (context) => OrderDetailScreen(
-                                nOrder: snapshot.data![index])));
+                                order: snapshot.data![index])));
                   },
                   child: Padding(
                     padding:
-                    const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
+                        const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
                     child: OrderWidget(nOrder: snapshot.data![index]),
                   ),
                 );

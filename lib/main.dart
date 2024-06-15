@@ -1,3 +1,4 @@
+import 'package:admin/providers/order_detail_provider.dart';
 import 'package:admin/providers/order_provider.dart';
 import 'package:admin/screens/chat_list_screen.dart';
 import 'package:admin/screens/inner_screen/chats/chat_screen.dart';
@@ -57,6 +58,9 @@ class MyApp extends StatelessWidget {
               ChangeNotifierProvider(create: (_) {
                 return OrderProvider();
               }),
+              ChangeNotifierProvider(create: (_) {
+                return OrderDetailProvider();
+              }),
             ],
             child: Consumer<ThemeProvider>(
                 builder: (context, themeProvider, child) {
@@ -68,8 +72,8 @@ class MyApp extends StatelessWidget {
                     context: context),
                 home: const DashboardScreen(),
                 routes: {
-                  OrdersScreenFree.routeName: (context) =>
-                      const OrdersScreenFree(),
+                  OrdersScreen.routeName: (context) =>
+                      const OrdersScreen(),
                   SearchScreen.routeName: (context) => const SearchScreen(),
                   EditOrUploadProductScreen.routeName: (context) =>
                       const EditOrUploadProductScreen(),

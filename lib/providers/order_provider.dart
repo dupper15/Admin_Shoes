@@ -1,36 +1,30 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
-import '../models/order_model.dart';
+import '../models/order_model.dart' as ord;
 
 class OrderProvider with ChangeNotifier {
-  final List<NOrder> orders = [];
+  final List<ord.Order> orders = [];
 
-  List<NOrder> get getOrders => orders;
+  List<ord.Order> get getOrders => orders;
 
-  Future<List<NOrder>> fetchNOrders() async {
-    final auth = FirebaseAuth.instance;
-    User? user = auth.currentUser;
-    var uid = user!.uid;
+  Future<List<ord.Order>> fetchNOrders() async {
     try {
       await FirebaseFirestore.instance
           .collection("orders")
-          .where('shopperId', isEqualTo: uid)
           .orderBy("date", descending: false)
           .get()
           .then((orderSnapshot) {
         if (orderSnapshot.docs.isNotEmpty) {
           orders.clear();
           for (var element in orderSnapshot.docs) {
-            var displayProduct = DisplayProduct(
+            var displayProduct = ord.DisplayProduct(
                 imageUrl: element.get("displayProduct.imageUrl"),
                 productTitle: element.get("displayProduct.productTitle"),
                 price: element.get("displayProduct.price"),
                 quantity: element.get("displayProduct.quantity"));
             orders.insert(
                 0,
-                NOrder(
+                ord.Order(
                     orderId: element.get('orderId'),
                     shopperId: element.get('shopperId'),
                     total: element.get('total').toString(),
