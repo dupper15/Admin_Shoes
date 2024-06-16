@@ -35,7 +35,7 @@ class _ChatScreenReplyBarState extends State<ChatScreenReplyBar> {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.all(8.0),
-      color: Colors.grey,
+      color: Theme.of(context).cardColor,
       child: Row(
         children: [
           IconButton(

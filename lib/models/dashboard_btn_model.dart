@@ -46,7 +46,7 @@ class DashboardButtonsModel {
           },
         ),
         DashboardButtonsModel(
-            text: "Chats", imagePath: "assets/images/chat.png", onPressed: () {
+            text: "Chats", imagePath: "assets/images/chat2.png", onPressed: () {
           Navigator.pushNamed(context, ChatListScreen.routName);
         })
       ];

@@ -230,70 +230,79 @@ Widget buildChatList(BuildContext context) {
 }
 
 Widget textMessage(Message message) {
-  return Container(
-    padding: const EdgeInsets.all(16.0),
+  return Card(
     margin: const EdgeInsets.only(left: 8.0, top: 4.0, right: 8.0, bottom: 4.0),
-    decoration: BoxDecoration(
-      color: Colors.blue[100],
-      borderRadius: BorderRadius.circular(8.0),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          message.content!,
-          style: const TextStyle(fontSize: 16.0),
-        ),
-        const SizedBox(height: 4.0),
-        Text(
-          getTimeFromTimeStamp(message.timestamp!),
-          style: const TextStyle(fontSize: 12.0, color: Colors.grey),
-        ),
-      ],
+
+    child: Container(
+      padding: const EdgeInsets.all(10.0),
+      decoration: BoxDecoration(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            message.content!,
+            style: const TextStyle(fontSize: 16.0),
+          ),
+          const SizedBox(height: 4.0),
+          Text(
+            getTimeFromTimeStamp(message.timestamp!),
+            style: const TextStyle(fontSize: 12.0, color: Colors.grey),
+          ),
+        ],
+      ),
     ),
   );
 }
 
 Widget imageMessage(Message message) {
-  return Container(
-    padding: const EdgeInsets.all(16.0),
+  return Card(
     margin: const EdgeInsets.only(left: 8.0, top: 4.0, right: 8.0, bottom: 4.0),
-    decoration: BoxDecoration(
-      color: Colors.blue[100],
-      borderRadius: BorderRadius.circular(8.0),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 200,
-          height: 200,
-          child: Image.network(
-            message.content!,
-            fit: BoxFit.scaleDown,
-            loadingBuilder: (BuildContext context, Widget child,
-                ImageChunkEvent? loadingProgress) {
-              if (loadingProgress == null) return child;
-              return Center(
-                child: CircularProgressIndicator(
-                  value: loadingProgress.expectedTotalBytes != null
-                      ? loadingProgress.cumulativeBytesLoaded /
+    child: Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10.0),
+            child: Container(
+              width: 200,
+              height: 200,
+              child: Image.network(
+                message.content!,
+                fit: BoxFit.cover, // or BoxFit.scaleDown based on your needs
+                loadingBuilder: (BuildContext context, Widget child,
+                    ImageChunkEvent? loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
                           loadingProgress.expectedTotalBytes!
-                      : null,
-                ),
-              );
-            },
+                          : null,
+                    ),
+                  );
+                },
+              ),
+            ),
           ),
-        ),
-        const SizedBox(height: 4.0),
-        Text(
-          getTimeFromTimeStamp(message.timestamp!),
-          style: const TextStyle(fontSize: 12.0, color: Colors.grey),
-        ),
-      ],
+          const SizedBox(height: 4.0),
+          Text(
+            getTimeFromTimeStamp(message.timestamp!),
+            style: const TextStyle(fontSize: 12.0, color: Colors.grey),
+          ),
+        ],
+      ),
     ),
   );
 }
+
 
 Future<String> uploadImage(XFile pickedImage) async {
   final ref = FirebaseStorage.instance

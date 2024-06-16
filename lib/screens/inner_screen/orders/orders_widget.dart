@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fancy_shimmer_image/fancy_shimmer_image.dart';
 import 'package:flutter/material.dart';
 import '../../../const/app_constants.dart';
@@ -5,19 +6,25 @@ import '../../../models/order_model.dart';
 import '../../../services/my_app_functions.dart';
 import '../../../widgets/subtitle_text.dart';
 import '../../../widgets/title_text.dart';
+import '../../../models/order_model.dart' as MyOrder; // Use 'as' to provide a prefix
 
 class OrderWidget extends StatefulWidget {
-  const OrderWidget({super.key, required this.nOrder});
+  const OrderWidget({Key? key, required this.nOrder}) : super(key: key);
 
-  final Order nOrder;
+  final MyOrder.Order nOrder; // Use the prefix for the specific Order class
 
   @override
   State<OrderWidget> createState() => _OrderWidgetState();
 }
 
 class _OrderWidgetState extends State<OrderWidget> {
-  bool isLoading = false;
+  late Future<String> _userNameFuture;
 
+  @override
+  void initState() {
+    super.initState();
+    _userNameFuture = getUserName(widget.nOrder.shopperId);
+  }
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -32,27 +39,18 @@ class _OrderWidgetState extends State<OrderWidget> {
             padding: const EdgeInsets.all(8.0),
             child: Row(
               children: [
-                Container(
-                  decoration:
-                  BoxDecoration(border: Border.all(color: Colors.black)),
-                  child: SizedBox(
-                    height: 80,
-                    width: 80,
-                    child: Image.network(
-                      widget.nOrder.displayProduct.imageUrl,
-                      fit: BoxFit.scaleDown,
-                      loadingBuilder: (BuildContext context, Widget child,
-                          ImageChunkEvent? loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Center(
-                          child: CircularProgressIndicator(
-                            value: loadingProgress.expectedTotalBytes != null
-                                ? loadingProgress.cumulativeBytesLoaded /
-                                loadingProgress.expectedTotalBytes!
-                                : null,
-                          ),
-                        );
-                      },
+                SizedBox(
+                  height: 80,
+                  width: 80,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: FancyShimmerImage(
+                      height: MediaQuery.of(context).size.width * 0.25,
+                      width: MediaQuery.of(context).size.width * 0.25,
+                      imageUrl: widget.nOrder.displayProduct.imageUrl,
+                      boxFit: BoxFit.scaleDown,
+                      shimmerBaseColor: Colors.grey[300]!,
+                      shimmerHighlightColor: Colors.grey[100]!,
                     ),
                   ),
                 ),
@@ -106,12 +104,33 @@ class _OrderWidgetState extends State<OrderWidget> {
             indent: 4.0,
             endIndent: 4.0,
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              widget.nOrder.status,
-              style: const TextStyle(fontSize: 16.0),
-            ),
+          FutureBuilder<String>(
+            future: _userNameFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return CircularProgressIndicator(); // Hiển thị loading khi đang tải dữ liệu
+              } else if (snapshot.hasError) {
+                return Text('Error: ${snapshot.error}'); // Hiển thị lỗi nếu có lỗi xảy ra
+              } else {
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Khách hàng: ${snapshot.data ?? 'Unknown User'}",
+                      style: const TextStyle(fontSize: 16.0),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        widget.nOrder.status,
+                        style: const TextStyle(fontSize: 16.0),
+                      ),
+                    ),
+
+                  ],
+                );
+              }
+            },
           ),
         ],
       ),
@@ -119,3 +138,11 @@ class _OrderWidgetState extends State<OrderWidget> {
   }
 }
 
+Future<String> getUserName(String userId) async {
+  var userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+  if (userDoc.exists) {
+    return userDoc.data()?['userName'] ?? 'Unknown User';
+  } else {
+    return 'Unknown User';
+  }
+}

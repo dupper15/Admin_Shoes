@@ -23,7 +23,7 @@ class _OrderScreenState extends State<OrdersScreen> {
     return Scaffold(
         appBar: AppBar(
           title: const TitlesTextWidget(
-            label: 'Đã mua',
+            label: 'Đơn hàng',
           ),
           bottom: PreferredSize(
               preferredSize: const Size.fromHeight(4.0),
